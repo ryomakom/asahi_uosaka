@@ -1,9 +1,10 @@
-# 朝日・阪大調査データ整形用コード"
+# 朝日・阪大調査データ整形用コード
 
 <div align="right">
 朝日新聞デジタル企画報道部　小宮山亮磨  <br>
 @ryomakom  <br>
 2025/12/3  </div>
+
 
 2025年7月の参院選に向けて実施した「朝日・阪大調査」のデータを整形するコードです。調査結果は朝日新聞で[連載「ネット意識と選挙」](https://www.asahi.com/rensai/list.html?id=920)として発表しました。
 
@@ -13,49 +14,17 @@
 
 ```{r}
 library(tidyverse)
-
-# データセット（逐次追加）
-df_202502 <- read.csv("data/202502SurveyDat.csv", fileEncoding = "cp932", stringsAsFactors = FALSE,
-                      colClasses = c(zip = "character"))
-df_202503 <- read.csv("data/202503SurveyDat.csv", fileEncoding = "cp932", stringsAsFactors = FALSE,
-                      colClasses = c(zip = "character"))
-df_202504 <- read.csv("data/202504SurveyDat.csv", fileEncoding = "cp932", stringsAsFactors = FALSE,
-                      colClasses = c(zip = "character"))
-df_202505fresh <- read.csv("data/202505freshSurveyDat.csv", 
-                           fileEncoding = "cp932", stringsAsFactors = FALSE,
-                           colClasses = c(zip = "character"))
-df_202505recontact <- read.csv("data/202505recontactSurveyDat.csv", 
-                               fileEncoding = "cp932", stringsAsFactors = FALSE,
-                               colClasses = c(zip = "character"))
-df_202506 <- read.csv("data/202506SurveyDat.csv", 
-                      #fileEncoding = "cp932",
-                      stringsAsFactors = FALSE,
-                      colClasses = c(zip = "character"))
-
-df_20250701 <- read.csv("data/20250701SurveyDat.csv", 
-                      #fileEncoding = "cp932",
-                      stringsAsFactors = FALSE,
-                      colClasses = c(zip = "character"))
-
-df_20250707 <- read.csv("data/20250707SurveyDat.csv", 
-                      #fileEncoding = "cp932",
-                      stringsAsFactors = FALSE,
-                      colClasses = c(zip = "character"))
-
-df_20250712 <- read.csv("data/20250712SurveyDat.csv", 
-                      #fileEncoding = "cp932",
-                      stringsAsFactors = FALSE,
-                      colClasses = c(zip = "character"))
-
-df_20250716 <- read.csv("data/20250716SurveyDat.csv", 
-                      #fileEncoding = "cp932",
-                      stringsAsFactors = FALSE,
-                      colClasses = c(zip = "character"))
-
-df_20250718 <- read.csv("data/20250718SurveyDat.csv", 
-                      #fileEncoding = "cp932",
-                      stringsAsFactors = FALSE,
-                      colClasses = c(zip = "character"))
+df_202502 <- read_csv("data/202502SurveyDatFull.csv")
+df_202503 <- read_csv("data/202503SurveyDatFull.csv")
+df_202504 <- read_csv("data/202504SurveyDatFull.csv")
+df_202505fresh <- read_csv("data/202505freshSurveyDatFull.csv")
+df_202505recontact <- read_csv("data/202505recontactSurveyDatFull.csv")
+df_202506 <- read_csv("data/202506SurveyDatFull.csv")
+df_20250701 <- read_csv("data/20250701SurveyDatFull.csv")
+df_20250707 <- read_csv("data/20250707SurveyDatFull.csv")
+df_20250712 <- read_csv("data/20250712SurveyDatFull.csv")
+df_20250716 <- read_csv("data/20250716SurveyDatFull.csv")
+df_20250718 <- read_csv("data/20250718SurveyDatFull.csv")
 
 
 
@@ -71,16 +40,15 @@ dfs <- list(
   df_20250707,
   df_20250712,
   df_20250716,
-  df_20250718
-)
+  df_20250718)
 
-sources <- c("_02", "_03", "_04", "_05fresh", "_05recontact", 
-             "_06","_0701","_0707","_0712","_0716","_0718")
+sources <- c("_02", "_03", "_04", "_05fresh", "_05recontact", "_06", "_0701","_0707",
+             "_0712", "_0716", "_0718")
 
 # 🔹 長い形式に統一してから結合（suffixはまだつけない）
 long_all <- map2(dfs, sources, ~
   .x %>%
-    mutate(across(-PSID, as.character)) %>%
+    mutate(across(everything(), as.character)) %>%  # PSID も含めて全部 character
     pivot_longer(-PSID, names_to = "var", values_to = "value") %>%
     mutate(source = .y)
 ) %>%
@@ -106,7 +74,11 @@ long_all <- long_all %>%
 
 
 # ✅ ⛔ 検証ポイント：suffix付きでも重複が残っていないか確認
-long_all %>% filter(!is.na(value)) %>% group_by(PSID,var) %>% summarize(n=n()) %>% filter(n>1)
+long_all %>%
+  filter(!is.na(value)) %>%
+  group_by(PSID,var) %>%
+  summarize(n=n()) %>%
+  filter(n>1)
 
 # 🔹 5. 最終整形
 dat <- long_all %>%
@@ -114,6 +86,15 @@ dat <- long_all %>%
   filter(!is.na(value)) %>% 
   pivot_wider(names_from = var,values_from = value)
 
+dat_simple <- dat %>%
+  dplyr::select(PSID,
+                contains("label")) %>% 
+  pivot_longer(cols=-PSID,names_to = "category",values_to = "value") %>% 
+  mutate(category2=str_split_i(category,"_",1),
+         time=str_split_i(category,"_",-1)) %>% 
+  select(PSID,category2,time,value) %>% 
+  rename(category=category2) %>% 
+  mutate(value=ifelse(value=="自由民主党","自民党",value))
 
 
 ```
