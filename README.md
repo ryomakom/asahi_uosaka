@@ -19,7 +19,10 @@
 まずは各調査の生データを読み込んで統合します。
 
 ```{r}
+# 必要なパッケージはとりあえずtidyverseのみ
 library(tidyverse)
+
+# 各生データを取り込む
 df_202502 <- read_csv("data/202502SurveyDatFull.csv")
 df_202503 <- read_csv("data/202503SurveyDatFull.csv")
 df_202504 <- read_csv("data/202504SurveyDatFull.csv")
