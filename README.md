@@ -1,10 +1,6 @@
-<div style="background:#f5f5f5; padding:10px 16px; border-left:4px solid #4a90e2; margin:20px 0; font-size:14px;">
-  <strong>Note for English readers:</strong>
-  This page is written in Japanese. You can read it in English using your browser’s built-in translation feature 
-  (e.g., Chrome: <em>Right-click → “Translate to English”</em>).
-</div>
+> **Note for English readers:**  
+> This page is written in Japanese. You can read it in English using your browser’s built-in translation feature (e.g., Chrome: Right-click → “Translate to English”).
 
-<div class="container-fluid main-container">
 
 
 
