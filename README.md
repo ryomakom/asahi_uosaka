@@ -22,7 +22,6 @@
 # 必要なパッケージはとりあえずtidyverseのみ
 library(tidyverse)
 
-# 各生データを取り込む
 df_202502 <- read_csv("data/202502SurveyDatFull.csv")
 df_202503 <- read_csv("data/202503SurveyDatFull.csv")
 df_202504 <- read_csv("data/202504SurveyDatFull.csv")
@@ -34,8 +33,6 @@ df_20250707 <- read_csv("data/20250707SurveyDatFull.csv")
 df_20250712 <- read_csv("data/20250712SurveyDatFull.csv")
 df_20250716 <- read_csv("data/20250716SurveyDatFull.csv")
 df_20250718 <- read_csv("data/20250718SurveyDatFull.csv")
-
-
 
 # 🔹 1. 入力データフレームとサフィックス
 dfs <- list(
@@ -49,10 +46,14 @@ dfs <- list(
   df_20250707,
   df_20250712,
   df_20250716,
-  df_20250718)
+  df_20250718,
+  df_202511
+)
 
 sources <- c("_02", "_03", "_04", "_05fresh", "_05recontact", "_06", "_0701","_0707",
-             "_0712", "_0716", "_0718")
+             "_0712", "_0716", "_0718",
+             "_11"
+             )
 
 # 🔹 長い形式に統一してから結合（suffixはまだつけない）
 long_all <- map2(dfs, sources, ~
@@ -74,11 +75,9 @@ conflicting_vars <- long_all %>%
   distinct() %>% 
   pull()
 
-# 🔹 4. suffixを衝突している変数(と、6月から政党コードが変わった政党の好き嫌い変数)にだけ付与
+# 🔹 4. 衝突している変数にだけsuffixを付与
 long_all <- long_all %>%
-  mutate(var = if_else(var %in% conflicting_vars |
-                         str_detect(var,"party_preference_") |
-                         str_detect(var,"feelthermo_party"),
+  mutate(var = if_else(var %in% conflicting_vars,
                        paste0(var, source), var))
 
 
@@ -104,7 +103,6 @@ dat_simple <- dat %>%
   select(PSID,category2,time,value) %>% 
   rename(category=category2) %>% 
   mutate(value=ifelse(value=="自由民主党","自民党",value))
-
 
 ```
 
